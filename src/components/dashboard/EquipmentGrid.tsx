@@ -168,10 +168,10 @@ const EquipmentGrid = ({ equipment, projectName, projectId, onBack, onViewDetail
     allEquipmentTeamMembersCacheRef.current = allEquipmentTeamMembers;
   }, [allEquipmentTeamMembers]);
 
-  // Fetch team members for the viewing equipment
+  // Fetch team members for the viewing equipment (standalone: standalone_equipment_team_positions, project: equipment_team_positions)
   const fetchEquipmentTeamMembers = useCallback(async () => {
-    if (!viewingEquipmentId || projectId !== 'standalone') {
-      devLog('⏭️ Skipping fetchEquipmentTeamMembers:', { viewingEquipmentId, projectId });
+    if (!viewingEquipmentId) {
+      devLog('⏭️ Skipping fetchEquipmentTeamMembers: no viewingEquipmentId');
       return;
     }
     
@@ -205,9 +205,16 @@ const EquipmentGrid = ({ equipment, projectName, projectId, onBack, onViewDetail
     try {
       isFetchingTeamMembersRef.current = true;
       devLog('🔄 Fetching team members for equipment:', viewingEquipmentId);
-      // For standalone equipment, get team members from standalone_equipment_team_positions table
-      const { DatabaseService } = await import('@/lib/database');
-      const teamData = await DatabaseService.getStandaloneTeamPositions(viewingEquipmentId);
+      let teamData: any[] = [];
+      if (projectId === 'standalone') {
+        // Standalone equipment: standalone_equipment_team_positions table
+        const { DatabaseService } = await import('@/lib/database');
+        teamData = await DatabaseService.getStandaloneTeamPositions(viewingEquipmentId);
+      } else {
+        // Project equipment: equipment_team_positions table (who works on this equipment at what position)
+        const { default: fastAPI } = await import('@/lib/api');
+        teamData = await fastAPI.getProjectEquipmentTeamPositions(viewingEquipmentId);
+      }
       devLog('📥 Raw team data received:', teamData);
       
       const transformedMembers = (teamData as any[]).map((member, index) => ({
@@ -254,6 +261,29 @@ const EquipmentGrid = ({ equipment, projectName, projectId, onBack, onViewDetail
       setTeamMembersLoading(false);
     }
   }, [viewingEquipmentId, projectId]);
+
+  // Pre-fetch team members for all project equipment when equipment list loads (for equipment card grid)
+  const fetchAllProjectEquipmentTeamMembers = useCallback(async (equipmentList: any[]) => {
+    if (projectId === 'standalone' || !equipmentList?.length) return;
+    try {
+      const { default: fastAPI } = await import('@/lib/api');
+      const updates: Record<string, any[]> = {};
+      for (const eq of equipmentList) {
+        const teamData = await fastAPI.getProjectEquipmentTeamPositions(eq.id);
+        const transformed = (teamData as any[]).map((m: any, i: number) => ({
+          id: m.id || `member-${i}`,
+          name: m.person_name || 'Unknown',
+          position: m.position_name || '',
+          position_name: m.position_name,
+          person_name: m.person_name
+        }));
+        if (transformed.length > 0) updates[eq.id] = transformed;
+      }
+      if (Object.keys(updates).length > 0) {
+        setAllEquipmentTeamMembers(prev => ({ ...prev, ...updates }));
+      }
+    } catch (e) { /* silent */ }
+  }, [projectId]);
 
   // Helper function for permissions
   const getPermissionsByRole = (role: string) => {
@@ -419,19 +449,15 @@ const EquipmentGrid = ({ equipment, projectName, projectId, onBack, onViewDetail
 
   // Load equipment logs when viewing equipment details - OPTIMIZED: Team members already fetched above
   useEffect(() => {
-    if (viewingEquipmentId && projectId === 'standalone') {
-      if (equipmentDetailsTab === 'equipment-logs') {
+    if (viewingEquipmentId) {
+      if (projectId === 'standalone' && equipmentDetailsTab === 'equipment-logs') {
         loadEquipmentProgressEntries();
       }
-      // Team members are now fetched immediately when viewingEquipmentId changes (see useEffect above)
-      // No need to fetch again here - just refresh if needed
-      if (equipmentDetailsTab === 'settings' || equipmentDetailsTab === 'team') {
-        // Only refresh if we don't have cached data and not already fetching
-        const cachedData = allEquipmentTeamMembersCacheRef.current[viewingEquipmentId];
-        const hasCachedData = cachedData && cachedData.length > 0;
-        if (!hasCachedData && !isFetchingTeamMembersRef.current) {
-          fetchEquipmentTeamMembers();
-        }
+      // Team members: fetch when viewing equipment details (Equipment Details tab shows Team Members section) if not cached
+      const cachedData = allEquipmentTeamMembersCacheRef.current[viewingEquipmentId];
+      const hasCachedData = cachedData && cachedData.length > 0;
+      if (!hasCachedData && !isFetchingTeamMembersRef.current) {
+        fetchEquipmentTeamMembers();
       }
     }
     // Intentionally exclude fetchEquipmentTeamMembers and allEquipmentTeamMembers to prevent infinite loop
@@ -1604,13 +1630,13 @@ const EquipmentGrid = ({ equipment, projectName, projectId, onBack, onViewDetail
   // CRITICAL FIX: Refresh equipment data on mount to ensure progress images are loaded
   // The initial equipment prop might be stale and missing progress images
   // This must be AFTER refreshEquipmentData is defined
-  // NOTE: For editors/viewers with filtered equipment, we should NOT refresh from database
+  // NOTE: For project_manager, vdcr_manager, editors/viewers with filtered equipment, we should NOT refresh from database
   // as it would override the filtered equipment. Instead, we rely on the filtered equipment prop.
   useEffect(() => {
-    // Only refresh if we're not using filtered equipment (i.e., for admins/managers)
-    // For editors/viewers, the equipment prop is already filtered, so don't override it
+    // Only refresh if we're not using filtered equipment (i.e., for firm_admin only)
+    // For project_manager, vdcr_manager, editors/viewers, the equipment prop is already filtered by assignment
     const userRole = localStorage.getItem('userRole') || '';
-    const isFilteredUser = userRole === 'editor' || userRole === 'viewer';
+    const isFilteredUser = ['project_manager', 'vdcr_manager', 'editor', 'viewer'].includes(userRole);
     
     if (!isFilteredUser) {
       // Refresh equipment data immediately on mount to fetch latest progress images
@@ -1768,6 +1794,13 @@ const EquipmentGrid = ({ equipment, projectName, projectId, onBack, onViewDetail
       });
     }
   }, [equipment]);
+
+  // Pre-fetch team members for all project equipment when equipment list loads (equipment_team_positions)
+  useEffect(() => {
+    if (equipment && equipment.length > 0 && projectId !== 'standalone') {
+      fetchAllProjectEquipmentTeamMembers(equipment);
+    }
+  }, [equipment, projectId, fetchAllProjectEquipmentTeamMembers]);
 
   // Fetch documents when viewing equipment details
   useEffect(() => {
@@ -5443,15 +5476,16 @@ const EquipmentGrid = ({ equipment, projectName, projectId, onBack, onViewDetail
                       <h4 className="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4">Team Members</h4>
                       <div className="space-y-0">
                         {(() => {
-                          // Get team members from state (for standalone equipment) or fallback to equipment data
+                          // Get team members: equipment_team_positions (project) or standalone_equipment_team_positions (standalone)
                           let displayMembers: any[] = [];
-                          if (projectId === 'standalone' && viewingEquipmentId) {
-                            // Use teamMembers state if available, otherwise use allEquipmentTeamMembers cache
+                          if (viewingEquipmentId) {
+                            // Use teamMembers state if available (fetched when viewing), otherwise use allEquipmentTeamMembers cache (pre-fetched for grid)
                             displayMembers = teamMembers.length > 0 
                               ? teamMembers 
                               : (allEquipmentTeamMembers[viewingEquipmentId] || []);
-                          } else {
-                            // For project equipment, show Equipment Manager from equipment data
+                          }
+                          // Fallback for project equipment: Equipment Manager from equipment data if no team positions
+                          if (displayMembers.length === 0) {
                             const equipmentManager = viewingEquipment.equipmentManager || (viewingEquipment.custom_fields?.find((f: any) => f.name === 'Equipment Manager')?.value);
                             if (equipmentManager) {
                               displayMembers = [{ position: 'Equipment Manager', name: equipmentManager }];
@@ -9063,13 +9097,16 @@ const EquipmentGrid = ({ equipment, projectName, projectId, onBack, onViewDetail
                                 }
                               }
                             } else {
-                              // For project equipment, use projectMembers
-                              assignedMembers = projectMembers.filter(member => {
-                              // // console.log('🔍 Checking member:', member.name, 'equipment_assignments:', member.equipment_assignments);
-                              return member.equipment_assignments &&
-                                (member.equipment_assignments.includes(item.id) ||
-                                 member.equipment_assignments.includes("All Equipment"));
-                            });
+                              // For project equipment: use equipment_team_positions (allEquipmentTeamMembers) first, then projectMembers
+                              if (allEquipmentTeamMembers[item.id] && allEquipmentTeamMembers[item.id].length > 0) {
+                                assignedMembers = allEquipmentTeamMembers[item.id];
+                              } else {
+                                assignedMembers = projectMembers.filter(member => {
+                                  return member.equipment_assignments &&
+                                    (member.equipment_assignments.includes(item.id) ||
+                                     member.equipment_assignments.includes("All Equipment"));
+                                });
+                              }
                             }
                             
                             // // console.log('🔍 Team tab - assignedMembers:', assignedMembers);
@@ -9081,11 +9118,11 @@ const EquipmentGrid = ({ equipment, projectName, projectId, onBack, onViewDetail
                               ...assignedMembers.map(member => ({
                                 id: `member-${member.id}`,
                                 name: projectId === 'standalone' 
-                                  ? `${member.name} - ${member.position || 'Team Member'}` // Show "Name - Position" for standalone
-                                  : (member.position || 'Team Member'), // For projects, show position only
+                                  ? `${member.name} - ${member.position || member.position_name || 'Team Member'}` // Show "Name - Position" for standalone
+                                  : `${member.name || member.person_name || 'Unknown'} - ${member.position || member.position_name || 'Team Member'}`, // For projects: "Name - Position" from equipment_team_positions
                                 value: projectId === 'standalone' 
-                                  ? member.position || 'Team Member' // For standalone, value is just position
-                                  : member.name, // For projects, value is name
+                                  ? (member.position || member.position_name || 'Team Member')
+                                  : (member.name || member.person_name || 'Unknown'),
                                 isProjectMember: true,
                                 memberData: member
                               })),

@@ -1792,6 +1792,19 @@ export const fastAPI = {
     }
   },
 
+  // Get project equipment team positions (for project equipment - equipment_team_positions table)
+  async getProjectEquipmentTeamPositions(equipmentId: string) {
+    try {
+      const response = await api.get(
+        `/equipment_team_positions?equipment_id=eq.${equipmentId}&order=created_at.desc`
+      );
+      return Array.isArray(response.data) ? response.data : (response.data ? [response.data] : []);
+    } catch (error: any) {
+      console.error('Error fetching project equipment team positions:', error);
+      return [];
+    }
+  },
+
   // Create team position (for project equipment)
   async createTeamPosition(teamPositionData: any) {
     try {

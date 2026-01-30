@@ -116,14 +116,13 @@ const UnifiedProjectView = ({
     //   teamMemberEmails: teamMembers.map((m: any) => m.email?.toLowerCase().trim())
     // });
     
-    // Project managers and VDCR managers can see all equipment
-    if (currentUserRole === 'firm_admin' || currentUserRole === 'project_manager' || currentUserRole === 'vdcr_manager') {
-      // console.log('✅ User is admin/manager - showing all equipment');
+    // Only firm_admin sees all equipment; project_manager and vdcr_manager see assigned equipment only
+    if (currentUserRole === 'firm_admin') {
       return equipment;
     }
     
-    // For editors and viewers, filter by equipment assignments
-    if (currentUserRole === 'editor' || currentUserRole === 'viewer') {
+    // For project_manager, vdcr_manager, editors and viewers - filter by equipment assignments
+    if (currentUserRole === 'project_manager' || currentUserRole === 'vdcr_manager' || currentUserRole === 'editor' || currentUserRole === 'viewer') {
       // If team members are still loading, wait (don't show equipment yet)
       if (teamMembersLoading) {
         // console.log('⏳ Team members still loading - waiting...');

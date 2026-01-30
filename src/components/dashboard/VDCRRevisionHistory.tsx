@@ -17,6 +17,7 @@ interface RevisionEvent {
   days_elapsed?: number;
   notes?: string;
   document_url?: string;
+  created_at?: string; // For tiebreaker when event_date is same
   created_by_user?: {
     full_name?: string;
     email?: string;
@@ -178,7 +179,9 @@ const VDCRRevisionHistory: React.FC<VDCRRevisionHistoryProps> = ({
       const dateDiff = new Date(a.event_date).getTime() - new Date(b.event_date).getTime();
       if (dateDiff !== 0) return dateDiff;
       // Tiebreaker: use created_at to ensure consistent ordering when dates are the same
-      return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      const aTie = (a as any).created_at || a.event_date;
+      const bTie = (b as any).created_at || b.event_date;
+      return new Date(aTie).getTime() - new Date(bTie).getTime();
     });
 
     // Group by revision
