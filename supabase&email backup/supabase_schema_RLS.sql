@@ -70,6 +70,12 @@ USING (
   AND EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'firm_admin' AND is_active = true)
 );
 
+-- All users can view their own firm (for company name display in header)
+CREATE POLICY "Users can view their own firm"
+ON public.firms FOR SELECT
+TO authenticated
+USING (id = public.get_user_firm_id());
+
 -- Super admin can insert firms
 CREATE POLICY "Super admin can insert firms"
 ON public.firms FOR INSERT
@@ -817,6 +823,20 @@ WITH CHECK (
   AND created_by = auth.uid()
 );
 
+-- Users can delete activity logs for equipment in projects they're assigned to (required for equipment deletion cascade)
+CREATE POLICY "Users can delete equipment activity logs"
+ON public.equipment_activity_logs FOR DELETE
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM public.equipment e
+    WHERE e.id = equipment_activity_logs.equipment_id
+    AND e.project_id IS NOT NULL
+    AND public.is_assigned_to_project(e.project_id)
+  )
+  OR public.is_assigned_to_project(project_id)
+);
+
 -- ============================================================================
 -- 11. STANDALONE_EQUIPMENT TABLE
 -- ============================================================================
@@ -1351,6 +1371,26 @@ WITH CHECK (
     )
   )
   AND created_by = auth.uid()
+);
+
+-- Users can delete activity logs for standalone equipment they're assigned to (required for equipment deletion cascade)
+CREATE POLICY "Users can delete standalone equipment activity logs"
+ON public.standalone_equipment_activity_logs FOR DELETE
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM public.standalone_equipment se
+    WHERE se.id = standalone_equipment_activity_logs.equipment_id
+    AND (
+      EXISTS (
+        SELECT 1 FROM public.standalone_equipment_team_positions tp
+        JOIN public.users u ON LOWER(TRIM(tp.email)) = LOWER(TRIM(u.email))
+        WHERE tp.equipment_id = se.id
+        AND u.id = auth.uid()
+      )
+      OR se.created_by = auth.uid()
+    )
+  )
 );
 
 -- ============================================================================

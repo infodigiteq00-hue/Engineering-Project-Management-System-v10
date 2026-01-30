@@ -12,6 +12,7 @@ ALTER TABLE public.equipment_activity_logs ENABLE ROW LEVEL SECURITY;
 -- Drop existing policies if any
 DROP POLICY IF EXISTS "Authenticated users can view equipment activity logs" ON public.equipment_activity_logs;
 DROP POLICY IF EXISTS "Authenticated users can insert equipment activity logs" ON public.equipment_activity_logs;
+DROP POLICY IF EXISTS "Authenticated users can delete equipment activity logs" ON public.equipment_activity_logs;
 
 -- Policy: Authenticated users can view all equipment activity logs
 CREATE POLICY "Authenticated users can view equipment activity logs"
@@ -25,6 +26,12 @@ ON public.equipment_activity_logs FOR INSERT
 TO authenticated
 WITH CHECK (true);
 
+-- Policy: Authenticated users can delete equipment activity logs (required for equipment deletion cascade)
+CREATE POLICY "Authenticated users can delete equipment activity logs"
+ON public.equipment_activity_logs FOR DELETE
+TO authenticated
+USING (true);
+
 -- ============================================================================
 -- 2. STANDALONE_EQUIPMENT_ACTIVITY_LOGS TABLE
 -- ============================================================================
@@ -33,6 +40,7 @@ ALTER TABLE public.standalone_equipment_activity_logs ENABLE ROW LEVEL SECURITY;
 -- Drop existing policies if any
 DROP POLICY IF EXISTS "Authenticated users can view standalone equipment activity logs" ON public.standalone_equipment_activity_logs;
 DROP POLICY IF EXISTS "Authenticated users can insert standalone equipment activity logs" ON public.standalone_equipment_activity_logs;
+DROP POLICY IF EXISTS "Authenticated users can delete standalone equipment activity logs" ON public.standalone_equipment_activity_logs;
 
 -- Policy: Authenticated users can view all standalone equipment activity logs
 CREATE POLICY "Authenticated users can view standalone equipment activity logs"
@@ -45,6 +53,12 @@ CREATE POLICY "Authenticated users can insert standalone equipment activity logs
 ON public.standalone_equipment_activity_logs FOR INSERT
 TO authenticated
 WITH CHECK (true);
+
+-- Policy: Authenticated users can delete standalone equipment activity logs (required for equipment deletion cascade)
+CREATE POLICY "Authenticated users can delete standalone equipment activity logs"
+ON public.standalone_equipment_activity_logs FOR DELETE
+TO authenticated
+USING (true);
 
 -- ============================================================================
 -- 3. VDCR_ACTIVITY_LOGS TABLE

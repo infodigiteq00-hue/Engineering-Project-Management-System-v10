@@ -34,7 +34,8 @@ const Login = () => {
       key === 'userName' || 
       key === 'userEmail' || 
       key === 'firmId' || 
-      key === 'userId'
+      key === 'userId' ||
+      key === 'companyName'
     );
     keys.forEach(key => localStorage.removeItem(key));
     
@@ -567,13 +568,32 @@ const Login = () => {
         timeoutRef.current = null;
       }
       
+      // Fetch company name and logo from firms table if user has firm_id (for header display)
+      let companyName = '';
+      let logoUrl: string | null = null;
+      if (userData.firm_id) {
+        try {
+          const firmData = await fastAPI.getFirmById(userData.firm_id);
+          if (firmData?.name) {
+            companyName = firmData.name;
+          }
+          if (firmData?.logo_url) {
+            logoUrl = firmData.logo_url;
+          }
+        } catch (firmError) {
+          console.warn('⚠️ Could not fetch company data (non-fatal):', firmError);
+        }
+      }
+      
       // Store complete user info in localStorage for role-based routing and dashboard display
       const userInfo = {
         id: userData.id, // 🔧 FIX: Use users table ID instead of auth user ID
         email: userData.email,
         full_name: userData.full_name,
         role: userData.role,
-        firm_id: userData.firm_id
+        firm_id: userData.firm_id,
+        company_name: companyName,
+        logo_url: logoUrl
       };
       
       // Clear cache on login to ensure fresh data (non-blocking)
@@ -595,6 +615,12 @@ const Login = () => {
         localStorage.setItem('userEmail', userData.email);
         localStorage.setItem('firmId', userData.firm_id || '');
         localStorage.setItem('userId', authData.user.id);
+        if (companyName) {
+          localStorage.setItem('companyName', companyName);
+        }
+        if (logoUrl) {
+          localStorage.setItem('companyLogo', logoUrl);
+        }
       } catch (storageError) {
         console.error('⚠️ localStorage error (non-fatal):', storageError);
         // Continue with redirect even if localStorage fails
@@ -635,10 +661,16 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-3 sm:p-4">
       <div className="w-full max-w-md">
-        {/* Header */}
+        {/* Header - Welcome to + Company Logo */}
         <div className="text-center mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">Equipment Overview</h1>
-          <p className="text-sm sm:text-base text-gray-600">Multi-tenant project management platform</p>
+          <p className="text-sm sm:text-base text-gray-600 mb-2 sm:mb-3">Welcome to</p>
+          <a href="/" className="inline-block">
+            <img 
+              src="/Group%20134614.png" 
+              alt="ProjectFIO.ai by Digiteq Solutions" 
+              className="h-10 sm:h-12 lg:h-14 w-auto object-contain mx-auto"
+            />
+          </a>
         </div>
 
         {/* Form Card */}

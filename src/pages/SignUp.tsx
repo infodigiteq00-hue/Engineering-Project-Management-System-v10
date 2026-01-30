@@ -646,10 +646,16 @@ const SignUp = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-3 sm:p-4">
       <div className="w-full max-w-md">
-        {/* Header */}
+        {/* Header - Welcome to + Company Logo */}
         <div className="text-center mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">Equipment Overview</h1>
-          <p className="text-sm sm:text-base text-gray-600">Multi-tenant project management platform</p>
+          <p className="text-sm sm:text-base text-gray-600 mb-2 sm:mb-3">Welcome to</p>
+          <a href="/" className="inline-block">
+            <img 
+              src="/Group%20134614.png" 
+              alt="ProjectFIO.ai by Digiteq Solutions" 
+              className="h-10 sm:h-12 lg:h-14 w-auto object-contain mx-auto"
+            />
+          </a>
         </div>
 
         {/* Form Card */}

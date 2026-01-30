@@ -1756,6 +1756,22 @@ export const fastAPI = {
       // Get equipment details before deletion for logging
       const equipmentResponse = await api.get(`/standalone_equipment?id=eq.${id}&select=type,tag_number`);
       const equipment = equipmentResponse.data?.[0];
+
+      // Manually delete dependent records to satisfy foreign key constraints
+      const dependentTables = [
+        'standalone_equipment_progress_entries',
+        'standalone_equipment_progress_images',
+        'standalone_equipment_documents',
+        'standalone_equipment_team_positions',
+        'standalone_equipment_activity_logs'
+      ];
+      for (const table of dependentTables) {
+        try {
+          await api.delete(`/${table}?equipment_id=eq.${id}`);
+        } catch (err) {
+          console.warn(`⚠️ No records to delete from ${table} for equipment:`, id);
+        }
+      }
       
       const response = await api.delete(`/standalone_equipment?id=eq.${id}`);
       

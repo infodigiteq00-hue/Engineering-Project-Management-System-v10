@@ -103,58 +103,14 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({ loading, userName, userRo
   return (
     <div className="flex items-center justify-between mb-6 sm:mb-8">
       <div className="flex-1 flex items-center gap-2 sm:gap-3">
-        {/* Company Logo */}
-        {firmLogo ? (
-          <div className="flex-shrink-0 bg-white rounded-lg border border-gray-200 p-1.5 sm:p-2 shadow-sm flex items-center justify-center min-w-[48px] min-h-[48px] sm:min-w-[56px] sm:min-h-[56px] lg:min-w-[64px] lg:min-h-[64px] max-w-[200px] max-h-[64px] sm:max-h-[72px] lg:max-h-[80px]">
-            {firmLogo.toLowerCase().endsWith('.pdf') ? (
-              <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12">
-                <svg className="w-full h-full text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
-                </svg>
-              </div>
-            ) : (
-              <img 
-                src={firmLogo} 
-                alt={firmName || 'Company Logo'} 
-                className="max-w-[180px] max-h-[44px] sm:max-w-[190px] sm:max-h-[52px] lg:max-w-[200px] lg:max-h-[60px] w-auto h-auto object-contain"
-                style={{ 
-                  maxWidth: '100%', 
-                  height: 'auto',
-                  width: 'auto',
-                  display: 'block'
-                }}
-                onError={(e) => {
-                  // Hide image if it fails to load
-                  (e.target as HTMLImageElement).style.display = 'none';
-                }}
-              />
-            )}
-          </div>
-        ) : firmName ? (
-          <div className="flex-shrink-0 w-[48px] h-[48px] sm:w-[56px] sm:h-[56px] lg:w-[64px] lg:h-[64px] bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-sm">
-            <span className="text-white text-base sm:text-lg lg:text-xl font-bold">
-              {firmName.charAt(0).toUpperCase()}
-            </span>
-          </div>
-        ) : null}
-        
-        <div className="flex-1 min-w-0">
-          {firmName ? (
-            <>
-              <h1 className="text-base sm:text-lg lg:text-xl font-bold font-display bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-                {firmName}
-              </h1>
-              <p className="text-xs sm:text-sm text-gray-600 mt-1 font-sans">Project Management Dashboard</p>
-            </>
-          ) : (
-            <>
-              <h1 className="text-base sm:text-lg lg:text-xl font-bold font-display bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-                Project Management Dashboard
-              </h1>
-              <p className="text-xs sm:text-sm text-gray-600 mt-1 font-sans">Monitor project progress, equipment status, and key activities at a glance</p>
-            </>
-          )}
-        </div>
+        {/* ProjectFIO.ai Logo - prominent & clear */}
+        <a href="/" className="flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:ring-offset-2 rounded-lg">
+          <img 
+            src="/Group%20134614.png" 
+            alt="ProjectFIO.ai by Digiteq Solutions" 
+            className="h-9 sm:h-10 lg:h-11 w-auto object-contain object-left"
+          />
+        </a>
       </div>
       
       {/* User Profile with Logout Dropdown */}
@@ -170,18 +126,39 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({ loading, userName, userRo
         ) : (
           <>
             <div className="text-right">
-              <p className="text-xs sm:text-sm font-medium font-display bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-                {userName || 'User'}
+              <p className="text-xs sm:text-sm font-medium font-display text-gray-700">
+                {firmName || userName || 'User'}
               </p>
-              <p className="text-xs font-sans bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent capitalize">
-                {userRole ? userRole.replace('_', ' ') : 'User'}
+              <p className="text-xs font-sans text-gray-500">
+                {userName || 'User'}
               </p>
             </div>
             <button
               onClick={() => setShowDropdown(!showDropdown)}
-              className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 hover:opacity-90 transition-opacity cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                firmLogo && !firmLogo.toLowerCase().endsWith('.pdf') 
+                  ? 'bg-white border border-gray-200' 
+                  : 'bg-gray-100 border border-gray-200'
+              }`}
             >
-              {userName ? userName.charAt(0).toUpperCase() : 'U'}
+              {firmLogo && !firmLogo.toLowerCase().endsWith('.pdf') ? (
+                <img 
+                  src={firmLogo} 
+                  alt={firmName || 'Firm Logo'} 
+                  className="w-full h-full object-contain p-1"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                    const fallback = (e.target as HTMLImageElement).nextElementSibling;
+                    if (fallback) (fallback as HTMLElement).style.display = 'flex';
+                  }}
+                />
+              ) : null}
+              <span 
+                className="text-gray-600 text-xs sm:text-sm font-medium"
+                style={{ display: (firmLogo && !firmLogo.toLowerCase().endsWith('.pdf')) ? 'none' : 'flex' }}
+              >
+                {(firmName || userName) ? (firmName || userName).charAt(0).toUpperCase() : 'U'}
+              </span>
             </button>
 
             {/* Dropdown Menu */}

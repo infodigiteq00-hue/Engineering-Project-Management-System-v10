@@ -173,10 +173,13 @@ const VDCRRevisionHistory: React.FC<VDCRRevisionHistoryProps> = ({
   const getRevisionTracking = () => {
     if (events.length === 0) return { revisions: [], stats: null };
 
-    // Sort events chronologically
-    const sortedEvents = [...events].sort((a, b) => 
-      new Date(a.event_date).getTime() - new Date(b.event_date).getTime()
-    );
+    // Sort events chronologically, then by created_at as tiebreaker for same dates
+    const sortedEvents = [...events].sort((a, b) => {
+      const dateDiff = new Date(a.event_date).getTime() - new Date(b.event_date).getTime();
+      if (dateDiff !== 0) return dateDiff;
+      // Tiebreaker: use created_at to ensure consistent ordering when dates are the same
+      return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    });
 
     // Group by revision
     const revisionMap = new Map<string, { submitted?: RevisionEvent; received?: RevisionEvent }>();

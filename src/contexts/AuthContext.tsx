@@ -201,6 +201,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUserName(typedUserData.full_name);
       setFirmId(typedUserData.firm_id);
 
+      // Fetch company name and logo from firms table if user has firm_id (for header display)
+      let companyName = '';
+      let logoUrl: string | null = null;
+      if (typedUserData.firm_id) {
+        try {
+          const { fastAPI } = await import('@/lib/api');
+          const firmData = await fastAPI.getFirmById(typedUserData.firm_id);
+          if (firmData?.name) {
+            companyName = firmData.name;
+            localStorage.setItem('companyName', companyName);
+          }
+          if (firmData?.logo_url) {
+            logoUrl = firmData.logo_url;
+            localStorage.setItem('companyLogo', logoUrl);
+          }
+        } catch (firmError) {
+          // Non-fatal - use existing companyName from localStorage if any
+          companyName = localStorage.getItem('companyName') || '';
+          logoUrl = localStorage.getItem('companyLogo');
+        }
+      }
+
       // Store in localStorage
       localStorage.setItem('userRole', typedUserData.role);
       localStorage.setItem('userName', typedUserData.full_name);
@@ -215,7 +237,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         full_name: typedUserData.full_name,
         email: typedUserData.email || authUser.email,
         firm_id: typedUserData.firm_id,
-        is_active: typedUserData.is_active
+        is_active: typedUserData.is_active,
+        company_name: companyName,
+        logo_url: logoUrl
       };
       localStorage.setItem('userData', JSON.stringify(userDataObject));
       

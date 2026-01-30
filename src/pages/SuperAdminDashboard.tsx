@@ -51,7 +51,8 @@ interface User {
 
 const SuperAdminDashboard = () => {
   const { toast } = useToast();
-  const { user, signOut } = useAuth();
+  const { user, signOut, userName: authUserName } = useAuth();
+  const userName = authUserName || localStorage.getItem('userName') || user?.user_metadata?.full_name || 'Super Admin';
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -506,13 +507,13 @@ const SuperAdminDashboard = () => {
   const getPlanBadgeColor = (plan: string) => {
     switch (plan) {
       case 'premium':
-        return 'bg-gradient-to-r from-purple-500 to-purple-600 text-white';
+        return 'bg-purple-600 text-white';
       case 'enterprise':
-        return 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white';
+        return 'bg-indigo-600 text-white';
       case 'basic':
-        return 'bg-gradient-to-r from-blue-500 to-blue-600 text-white';
+        return 'bg-blue-600 text-white';
       default:
-        return 'bg-gradient-to-r from-gray-500 to-gray-600 text-white';
+        return 'bg-gray-600 text-white';
     }
   };
 
@@ -553,24 +554,33 @@ const SuperAdminDashboard = () => {
       <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-6 sm:mb-8">
-          <div className="flex-1">
-            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold font-display bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-              Super Admin Dashboard
-            </h1>
-            <p className="text-xs sm:text-sm text-gray-600 mt-1 font-sans">Manage companies, users, and platform settings.</p>
+          <div className="flex-1 flex items-center gap-2 sm:gap-3">
+            <a href="/" className="flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:ring-offset-2 rounded-lg">
+              <img 
+                src="/Group%20134614.png" 
+                alt="ProjectFIO.ai by Digiteq Solutions" 
+                className="h-9 sm:h-10 lg:h-11 w-auto object-contain object-left"
+              />
+            </a>
           </div>
 
           {/* User Profile with Logout Dropdown */}
           <div className="flex items-center gap-2 sm:gap-3 ml-4 relative" ref={dropdownRef}>
             <div className="text-right">
-              <p className="text-xs sm:text-sm font-medium font-display bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">Kirti Berekar</p>
-              <p className="text-xs font-sans bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">Super Admin</p>
+              <p className="text-xs sm:text-sm font-medium font-display text-gray-700">
+                {userName || 'User'}
+              </p>
+              <p className="text-xs font-sans text-gray-500">Super Admin</p>
             </div>
             <button
               onClick={() => setShowDropdown(!showDropdown)}
-              className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 hover:opacity-90 transition-opacity cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 bg-white border border-gray-200"
             >
-              K
+              <img 
+                src="/ProjectFlo_Symbol_Wht.png" 
+                alt="ProjectFLO" 
+                className="w-full h-full object-contain p-1"
+              />
             </button>
 
             {/* Dropdown Menu */}
@@ -581,7 +591,7 @@ const SuperAdminDashboard = () => {
                 onMouseDown={(e) => e.stopPropagation()}
               >
                 <div className="px-4 py-2 border-b border-gray-200">
-                  <p className="text-sm font-medium text-gray-900">Kirti Berekar</p>
+                  <p className="text-sm font-medium text-gray-900">{userName || 'User'}</p>
                   <p className="text-xs text-gray-500">Super Admin</p>
                 </div>
                 <div
@@ -608,43 +618,49 @@ const SuperAdminDashboard = () => {
 
         {/* Key Metrics */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <Card className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+          <Card className="bg-white border border-gray-200 shadow-md hover:shadow-lg transition-shadow">
             <CardContent className="p-4 sm:p-5 lg:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-100 text-sm font-medium uppercase tracking-wide font-sans">Total Companies</p>
-                  <p className="text-3xl sm:text-4xl font-bold text-white mt-2 font-display">{totalCompanies}</p>
+                  <p className="text-gray-600 text-sm font-medium uppercase tracking-wide font-sans">Total Companies</p>
+                  <p className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2 font-display">{totalCompanies}</p>
                 </div>
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                  <Grid className="w-6 h-6 text-white" />
+                <div className="w-[72px] h-[72px] bg-blue-100 rounded-full flex items-center justify-center shadow-sm">
+                  <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                    <Grid className="w-[22px] h-[22px] text-white" strokeWidth={2.5} />
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+          <Card className="bg-white border border-gray-200 shadow-md hover:shadow-lg transition-shadow">
             <CardContent className="p-4 sm:p-5 lg:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-100 text-sm font-medium uppercase tracking-wide font-sans">Total Users</p>
-                  <p className="text-3xl sm:text-4xl font-bold text-white mt-2 font-display">{totalUsers}</p>
+                  <p className="text-gray-600 text-sm font-medium uppercase tracking-wide font-sans">Total Users</p>
+                  <p className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2 font-display">{totalUsers}</p>
                 </div>
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                  <Users className="w-6 h-6 text-white" />
+                <div className="w-[72px] h-[72px] bg-blue-100 rounded-full flex items-center justify-center shadow-sm">
+                  <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                    <Users className="w-[22px] h-[22px] text-white" strokeWidth={2.5} />
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+          <Card className="bg-white border border-gray-200 shadow-md hover:shadow-lg transition-shadow">
             <CardContent className="p-4 sm:p-5 lg:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-100 text-sm font-medium uppercase tracking-wide font-sans">Active Companies</p>
-                  <p className="text-3xl sm:text-4xl font-bold text-white mt-2 font-display">{activeCompanies}</p>
+                  <p className="text-gray-600 text-sm font-medium uppercase tracking-wide font-sans">Active Companies</p>
+                  <p className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2 font-display">{activeCompanies}</p>
                 </div>
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                  <Circle className="w-6 h-6 text-white" />
+                <div className="w-[72px] h-[72px] bg-blue-100 rounded-full flex items-center justify-center shadow-sm">
+                  <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                    <Circle className="w-[22px] h-[22px] text-white" strokeWidth={2.5} />
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -655,7 +671,7 @@ const SuperAdminDashboard = () => {
         <div className="mb-8">
           <Button
             onClick={() => setShowCreateCompany(true)}
-            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
+            className="bg-blue-600 hover:bg-blue-700 text-white"
             disabled={loading}
           >
             <Plus className="w-4 h-4 mr-2" />
@@ -671,8 +687,8 @@ const SuperAdminDashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {companies.map((company) => (
               <Card key={company.id} className="overflow-hidden">
-                {/* Top Section - Blue to Purple Gradient */}
-                <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-4 text-white">
+                {/* Top Section - Solid Blue Header */}
+                <div className="bg-blue-600 p-4 text-white">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <Grid className="w-5 h-5" />
@@ -745,7 +761,7 @@ const SuperAdminDashboard = () => {
                       {company.admin_name ? (
                         <>
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-sm font-medium">
                               {company.admin_name ? company.admin_name.charAt(0).toUpperCase() : 'A'}
                             </div>
                             <div>
@@ -772,11 +788,11 @@ const SuperAdminDashboard = () => {
                     </div>
 
                     {/* Stats */}
-                    <div className="mt-4 pt-4 border-t">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">{company.user_count}/{company.max_users || 5} Users</span>
-                        <span className="text-gray-600">{company.admin_name ? '1' : '0'} Admins</span>
-                        <span className="text-gray-600">{Math.max(0, company.user_count - (company.admin_name ? 1 : 0))} Members</span>
+                    <div className="mt-4 pt-4 border-t border-gray-200 bg-gray-50 -mx-4 -mb-4 px-4 py-3 rounded-b-lg">
+                      <div className="flex justify-between text-sm text-gray-700">
+                        <span>{company.user_count}/{company.max_users || 5} Users</span>
+                        <span>{company.admin_name ? '1' : '0'} Admins</span>
+                        <span>{Math.max(0, company.user_count - (company.admin_name ? 1 : 0))} Members</span>
                       </div>
                     </div>
                   </div>
@@ -969,7 +985,7 @@ const SuperAdminDashboard = () => {
             <div className="flex gap-3 mt-6">
               <Button
                 onClick={handleCreateCompany}
-                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white flex-1"
+                className="bg-blue-600 hover:bg-blue-700 text-white flex-1"
                 disabled={!newCompany.name || !newCompany.admin_name || !newCompany.admin_email || creatingCompany}
               >
                 {creatingCompany ? (
@@ -1198,7 +1214,7 @@ const SuperAdminDashboard = () => {
             <div className="flex gap-3 mt-6">
               <Button
                 onClick={handleUpdateCompany}
-                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white flex-1"
+                className="bg-blue-600 hover:bg-blue-700 text-white flex-1"
                 disabled={updatingCompany}
               >
                 {updatingCompany ? (

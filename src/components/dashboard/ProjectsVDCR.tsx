@@ -230,10 +230,13 @@ const ProjectsVDCR = ({ projectId, projectName, onBack, onViewDetails, onViewEqu
               return;
             }
 
-            // Sort by event_date descending to get most recent
-            const sortedEvents = [...rev00Events].sort((a: any, b: any) => 
-              new Date(b.event_date).getTime() - new Date(a.event_date).getTime()
-            );
+            // Sort by event_date descending to get most recent, then by created_at descending as tiebreaker
+            const sortedEvents = [...rev00Events].sort((a: any, b: any) => {
+              const dateDiff = new Date(b.event_date).getTime() - new Date(a.event_date).getTime();
+              if (dateDiff !== 0) return dateDiff;
+              // Tiebreaker: use created_at to get the most recently created event
+              return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            });
             
             const lastEvent = sortedEvents[0];
             
@@ -282,10 +285,13 @@ const ProjectsVDCR = ({ projectId, projectName, onBack, onViewDetails, onViewEqu
             return;
           }
 
-          // Sort by event_date descending to get most recent
-          const sortedEvents = [...currentRevEvents].sort((a: any, b: any) => 
-            new Date(b.event_date).getTime() - new Date(a.event_date).getTime()
-          );
+          // Sort by event_date descending to get most recent, then by created_at descending as tiebreaker
+          const sortedEvents = [...currentRevEvents].sort((a: any, b: any) => {
+            const dateDiff = new Date(b.event_date).getTime() - new Date(a.event_date).getTime();
+            if (dateDiff !== 0) return dateDiff;
+            // Tiebreaker: use created_at to get the most recently created event
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          });
           
           const lastEvent = sortedEvents[0];
           
@@ -530,10 +536,13 @@ const ProjectsVDCR = ({ projectId, projectName, onBack, onViewDetails, onViewEqu
              
              // Find the latest document URL from most recent event (submitted or received)
              if (events.length > 0) {
-               // Sort by event_date descending to get most recent
-               const sortedEvents = [...events].sort((a, b) => 
-                 new Date(b.event_date).getTime() - new Date(a.event_date).getTime()
-               );
+               // Sort by event_date descending to get most recent, then by created_at descending as tiebreaker
+               const sortedEvents = [...events].sort((a, b) => {
+                 const dateDiff = new Date(b.event_date).getTime() - new Date(a.event_date).getTime();
+                 if (dateDiff !== 0) return dateDiff;
+                 // Tiebreaker: use created_at to get the most recently created event
+                 return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+               });
                // Get the most recent event with a document_url
                const latestEvent = sortedEvents.find((e: any) => e.document_url);
                if (latestEvent?.document_url) {
@@ -572,9 +581,12 @@ const ProjectsVDCR = ({ projectId, projectName, onBack, onViewDetails, onViewEqu
           // Get event date from latest revision event if available
           let eventDate = record.updated_at;
           if (latestDocumentUrl && revisionEvents.length > 0) {
-            const sortedEvents = [...revisionEvents].sort((a, b) => 
-              new Date(b.event_date).getTime() - new Date(a.event_date).getTime()
-            );
+            const sortedEvents = [...revisionEvents].sort((a, b) => {
+              const dateDiff = new Date(b.event_date).getTime() - new Date(a.event_date).getTime();
+              if (dateDiff !== 0) return dateDiff;
+              // Tiebreaker: use created_at to get the most recently created event
+              return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            });
             const latestEvent = sortedEvents.find((e: any) => e.document_url === latestDocumentUrl);
             if (latestEvent?.event_date) {
               eventDate = latestEvent.event_date;
@@ -762,10 +774,13 @@ const ProjectsVDCR = ({ projectId, projectName, onBack, onViewDetails, onViewEqu
              return;
            }
 
-           // Sort by event_date descending to get most recent
-           const sortedEvents = [...rev00Events].sort((a: any, b: any) => 
-             new Date(b.event_date).getTime() - new Date(a.event_date).getTime()
-           );
+           // Sort by event_date descending to get most recent, then by created_at descending as tiebreaker
+           const sortedEvents = [...rev00Events].sort((a: any, b: any) => {
+             const dateDiff = new Date(b.event_date).getTime() - new Date(a.event_date).getTime();
+             if (dateDiff !== 0) return dateDiff;
+             // Tiebreaker: use created_at to get the most recently created event
+             return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+           });
            
            const lastEvent = sortedEvents[0];
            
@@ -818,9 +833,12 @@ const ProjectsVDCR = ({ projectId, projectName, onBack, onViewDetails, onViewEqu
           return;
         }
 
-        const sortedEvents = [...currentRevEvents].sort((a: any, b: any) => 
-          new Date(b.event_date).getTime() - new Date(a.event_date).getTime()
-        );
+        const sortedEvents = [...currentRevEvents].sort((a: any, b: any) => {
+          const dateDiff = new Date(b.event_date).getTime() - new Date(a.event_date).getTime();
+          if (dateDiff !== 0) return dateDiff;
+          // Tiebreaker: use created_at to get the most recently created event
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
         
         const lastEvent = sortedEvents[0];
         
@@ -2332,10 +2350,13 @@ const handleCreateRevisionEvent = async () => {
       try {
         const events: any = await fastAPI.getVDCRRevisionEvents(recordIdToUse);
         if (Array.isArray(events) && events.length > 0) {
-          // Sort by event_date descending to get most recent
-          const sortedEvents = [...events].sort((a, b) => 
-            new Date(b.event_date).getTime() - new Date(a.event_date).getTime()
-          );
+          // Sort by event_date descending to get most recent, then by created_at descending as tiebreaker
+          const sortedEvents = [...events].sort((a, b) => {
+            const dateDiff = new Date(b.event_date).getTime() - new Date(a.event_date).getTime();
+            if (dateDiff !== 0) return dateDiff;
+            // Tiebreaker: use created_at to get the most recently created event
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          });
           // Get the most recent event with a document_url
           const latestEvent = sortedEvents.find((e: any) => e.document_url);
           if (latestEvent?.document_url) {
